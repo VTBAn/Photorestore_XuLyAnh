@@ -22,7 +22,7 @@ from gui.styles import DARK_THEME_QSS
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("PhotoRestore — Phần mềm Phục hồi & Chỉnh sửa Ảnh cũ (Đề tài 3)")
+        self.setWindowTitle("PhotoRestore — Phần mềm Phục hồi & Chỉnh sửa Ảnh cũ")
         self.resize(1400, 860)
         self.setStyleSheet(DARK_THEME_QSS)
 
@@ -79,15 +79,15 @@ class MainWindow(QMainWindow):
         self._act(m_img, "Chuyển ảnh xám", self.cmd_grayscale)
         self._act(m_img, "Cắt theo vùng chọn (Chọn công cụ Cắt)", lambda: self._select_tool("crop"))
         self._act(m_img, "Đổi kích thước...", self.cmd_resize_dialog)
-        self._act(m_img, "Giảm mức xám [TC]", self.cmd_quantize)
+        self._act(m_img, "Giảm mức xám", self.cmd_quantize)
 
         # 3. ĐIỀU CHỈNH (M2)
         m_adj = mb.addMenu("Điều chỉnh")
         self._act(m_adj, "Âm bản", self.cmd_negative)
-        self._act(m_adj, "Biến đổi Log [TC]", self.cmd_log)
-        self._act(m_adj, "Biến đổi Gamma [TC]", self.cmd_gamma)
+        self._act(m_adj, "Biến đổi Log", self.cmd_log)
+        self._act(m_adj, "Biến đổi Gamma", self.cmd_gamma)
         self._act(m_adj, "Kéo giãn tương phản", self.cmd_contrast_stretch)
-        self._act(m_adj, "Cân bằng Histogram [TC]", self.cmd_hist_eq)
+        self._act(m_adj, "Cân bằng Histogram", self.cmd_hist_eq)
         self._act(m_adj, "CLAHE (Cân bằng thích nghi)", self.cmd_clahe)
 
         # 4. BỘ LỌC (M3 & M4)
@@ -99,7 +99,7 @@ class MainWindow(QMainWindow):
         self._act(m_flt, "Sắc nét Laplacian", self.cmd_laplacian_sharpen)
         self._act(m_flt, "Unsharp Masking", self.cmd_unsharp)
         m_flt.addSeparator()
-        sub_noise = m_flt.addMenu("Nhiễu & Giảm nhiễu (M4)")
+        sub_noise = m_flt.addMenu("Nhiễu & Giảm nhiễu")
         self._act(sub_noise, "Thêm nhiễu Gaussian", self.cmd_add_gaussian_noise)
         self._act(sub_noise, "Thêm nhiễu muối tiêu", self.cmd_add_sp_noise)
         self._act(sub_noise, "Giảm nhiễu & Tính PSNR", self.cmd_denoise)
@@ -396,7 +396,7 @@ class MainWindow(QMainWindow):
             f"Kiểu dữ liệu: {info['dtype']}\n"
             f"Dung lượng chưa nén: {info['size_bytes']:,} bytes"
         )
-        QMessageBox.information(self, "Thông tin ảnh (M1)", msg)
+        QMessageBox.information(self, "Thông tin ảnh", msg)
 
     def cmd_grayscale(self):
         if not self._require_image():
@@ -419,7 +419,7 @@ class MainWindow(QMainWindow):
             return
         h, w = self.current_img.shape[:2]
         dlg = QDialog(self)
-        dlg.setWindowTitle("Đổi kích thước ảnh (M1)")
+        dlg.setWindowTitle("Đổi kích thước ảnh")
         form = QFormLayout(dlg)
 
         sp_w = QSpinBox(minimum=1, maximum=10000, value=w)
@@ -471,7 +471,7 @@ class MainWindow(QMainWindow):
             self.hist_widget.update_histogram(self.preview_img)
 
         sl.valueChanged.connect(update)
-        self.param_layout.addWidget(QLabel("<b>Giảm mức xám [TC]</b>"))
+        self.param_layout.addWidget(QLabel("<b>Giảm mức xám</b>"))
         self.param_layout.addWidget(lbl)
         self.param_layout.addWidget(sl)
         self._add_preview_controls(
@@ -493,7 +493,7 @@ class MainWindow(QMainWindow):
         if not self._require_image():
             return
         out = m2_adjust.log_transform(self.current_img)
-        self._push_history("Biến đổi Log [TC]", out, m2_adjust.log_transform, {})
+        self._push_history("Biến đổi Log", out, m2_adjust.log_transform, {})
 
     def cmd_gamma(self):
         if not self._require_image():

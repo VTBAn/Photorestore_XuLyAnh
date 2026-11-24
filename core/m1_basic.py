@@ -16,7 +16,7 @@ def get_image_info(img: np.ndarray) -> dict:
 
 
 def to_grayscale(img: np.ndarray) -> np.ndarray:
-    """Chuyển ảnh màu BGR sang ảnh xám (M1)."""
+    """Chuyển ảnh màu BGR sang ảnh xám ."""
     if img.ndim == 2:
         return img.copy()
     return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -40,9 +40,10 @@ def resize_image(img: np.ndarray, new_w: int, new_h: int) -> np.ndarray:
     return cv2.resize(img, (new_w, new_h), interpolation=interp)
 
 
+
 def quantize_gray_levels(img: np.ndarray, levels: int = 16) -> np.ndarray:
     """
-    [TC] Giảm mức xám bằng NumPy (M1).
+    Giảm mức xám bằng NumPy.
     Công thức: bước = 256 / L; giá trị mới = (r // bước) * bước
     """
     levels = max(2, min(256, int(levels)))
