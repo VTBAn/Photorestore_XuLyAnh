@@ -288,15 +288,17 @@ class MainWindow(QMainWindow):
         btn_cancel = QPushButton("Hủy", objectName="secondaryBtn")
 
         def on_apply():
-            if self.preview_img is not None:
-                label, func, kwargs, log_msg = get_apply_info()
-                self._push_history(label, self.preview_img, func, kwargs)
-                if log_msg:
-                    self.result_box.append(log_msg)
-                self.preview_img = None
-                self._clear_param_panel()
-                self.param_layout.addWidget(QLabel(f"Đã áp dụng: {label}"))
-                self.param_layout.addStretch()
+            if self.preview_img is None:
+                return
+
+            label, func, kwargs, log_msg = get_apply_info()
+            self._push_history(label, self.preview_img, func, kwargs)
+
+            if log_msg:
+                self.result_box.append(log_msg)
+
+            # Giữ ảnh xem trước cùng các điều khiển đang mở
+            self.preview_img = self.current_img.copy()
 
         def on_cancel():
             self.preview_img = None
