@@ -512,7 +512,7 @@ class MainWindow(QMainWindow):
             self.hist_widget.update_histogram(self.preview_img)
 
         sl.valueChanged.connect(update)
-        self.param_layout.addWidget(QLabel("<b>Biến đổi Gamma [TC]</b>"))
+        self.param_layout.addWidget(QLabel("<b>Biến đổi Gamma</b>"))
         self.param_layout.addWidget(lbl)
         self.param_layout.addWidget(sl)
         self._add_preview_controls(
@@ -560,18 +560,18 @@ class MainWindow(QMainWindow):
         btn_cmp_cv = QPushButton("So sánh với OpenCV (cv2.equalizeHist)")
         btn_cmp_cv.clicked.connect(
             lambda: MultiImageDialog(
-                "So sánh Cân bằng Histogram: Tự cài [TC] vs OpenCV",
+                "So sánh Cân bằng Histogram: Tự cài vs OpenCV",
                 [
-                    ("Tự cài [TC] (NumPy)", self.preview_img),
+                    ("Tự cài (NumPy)", self.preview_img),
                     ("OpenCV (cv2.equalizeHist)", m2_adjust.histogram_equalize_opencv(self.current_img)),
                 ],
                 self
             ).exec()
         )
-        self.param_layout.addWidget(QLabel("<b>Cân bằng Histogram [TC]</b>"))
+        self.param_layout.addWidget(QLabel("<b>Cân bằng Histogram</b>"))
         self._add_preview_controls(
-            "Cân bằng Histogram [TC]",
-            lambda: ("Cân bằng Histogram [TC]", m2_adjust.histogram_equalize_tc, {}, ""),
+            "Cân bằng Histogram",
+            lambda: ("Cân bằng Histogram", m2_adjust.histogram_equalize_tc, {}, ""),
             extra_btn=btn_cmp_cv
         )
 
@@ -731,7 +731,7 @@ class MainWindow(QMainWindow):
             "Nhiễu Gaussian",
             lambda: (
                 f"Thêm nhiễu Gaussian σ={sl.value()}", m4_noise.add_gaussian_noise, {"sigma": sl.value()},
-                f"[M4] Đã thêm nhiễu Gaussian (σ={sl.value()}) | PSNR = {m4_noise.compute_psnr(self.clean_img_for_psnr, self.preview_img):.2f} dB"
+                f"Đã thêm nhiễu Gaussian (σ={sl.value()}) | PSNR = {m4_noise.compute_psnr(self.clean_img_for_psnr, self.preview_img):.2f} dB"
             )
         )
         update()
@@ -759,7 +759,7 @@ class MainWindow(QMainWindow):
             "Nhiễu muối tiêu",
             lambda: (
                 f"Thêm nhiễu muối tiêu {sl.value()}%", m4_noise.add_salt_pepper_noise, {"percent": sl.value()},
-                f"[M4] Đã thêm nhiễu muối tiêu ({sl.value()}%) | PSNR = {m4_noise.compute_psnr(self.clean_img_for_psnr, self.preview_img):.2f} dB"
+                f"Đã thêm nhiễu muối tiêu ({sl.value()}%) | PSNR = {m4_noise.compute_psnr(self.clean_img_for_psnr, self.preview_img):.2f} dB"
             )
         )
         update()
@@ -772,8 +772,8 @@ class MainWindow(QMainWindow):
         cb.addItems([
             "Lọc Trung bình (3×3)",
             "Lọc Trung vị (3×3)",
-            "Lọc Trung bình hình học [TC] (3×3)",
-            "Lọc Phản điều hòa [TC] (3×3)",
+            "Lọc Trung bình hình học (3×3)",
+            "Lọc Phản điều hòa (3×3)",
         ])
         lbl_q = QLabel("Bậc Q (Phản điều hòa): 0.0")
         sl_q = QSlider(Qt.Horizontal, minimum=-20, maximum=20, value=0)
@@ -807,7 +807,7 @@ class MainWindow(QMainWindow):
         cb.currentIndexChanged.connect(run_filter)
         sl_q.valueChanged.connect(run_filter)
 
-        self.param_layout.addWidget(QLabel("<b>Giảm nhiễu & Đo PSNR (M4)</b>"))
+        self.param_layout.addWidget(QLabel("<b>Giảm nhiễu & Đo PSNR</b>"))
         for w in (cb, lbl_q, sl_q, lbl_psnr):
             self.param_layout.addWidget(w)
 
@@ -834,7 +834,7 @@ class MainWindow(QMainWindow):
         if not self._require_image():
             return
         h, s, v = m5_color.split_hsv_channels(self.current_img)
-        MultiImageDialog("3 Kênh không gian màu HSV (M5)", [("Kênh H (Hue)", h), ("Kênh S (Saturation)", s), ("Kênh V (Value)", v)], self).exec()
+        MultiImageDialog("3 Kênh không gian màu HSV", [("Kênh H (Hue)", h), ("Kênh S (Saturation)", s), ("Kênh V (Value)", v)], self).exec()
 
     def cmd_adjust_hsv(self):
         if not self._require_image():
@@ -1010,13 +1010,13 @@ class MainWindow(QMainWindow):
             self.hist_widget.update_histogram(self.preview_img)
 
         sl.valueChanged.connect(update)
-        self.param_layout.addWidget(QLabel("<b>Xóa vùng nhỏ / Chấm bẩn (M6)</b>"))
+        self.param_layout.addWidget(QLabel("<b>Xóa vùng nhỏ / Chấm bẩn</b>"))
         for w in (lbl, sl, lbl_cnt):
             self.param_layout.addWidget(w)
         self._add_preview_controls(
             "Xóa vùng nhỏ",
             lambda: (f"Xóa vùng nhỏ (<{sl.value()}px)", m6_morph.remove_small_regions, {"min_area": sl.value()},
-                     f"[M6] Đã xóa {state['removed']} vùng nhiễu có diện tích < {sl.value()} px")
+                     f"Đã xóa {state['removed']} vùng nhiễu có diện tích < {sl.value()} px")
         )
         update()
 
@@ -1141,7 +1141,7 @@ class MainWindow(QMainWindow):
             "Tìm đường thẳng Hough",
             lambda: ("Tìm đường thẳng Hough", m7_edge.detect_lines_hough,
                      {"threshold": sl_t.value(), "min_length": sl_m.value(), "max_gap": sl_g.value()},
-                     f"[M7 Hough] {state['msg']}")
+                     f"[Hough] {state['msg']}")
         )
         update()
 
@@ -1191,7 +1191,7 @@ class MainWindow(QMainWindow):
             self.status_label.setText("Đang chạy mô hình AI tô màu ảnh đen trắng...")
             colorized = self.colorizer.colorize(self.current_img)
             self._push_history("AI Tô màu ảnh đen trắng", colorized, self.colorizer.colorize, {})
-            self.result_box.append("[AI-A] Đã tô màu tự động thành công! Bạn có thể dùng Menu Màu > Sắc độ/Bão hòa (M5) để tinh chỉnh thêm.")
+            self.result_box.append("[AI-A] Đã tô màu tự động thành công! Bạn có thể dùng Menu Màu > Sắc độ/Bão hòa để tinh chỉnh thêm.")
             self.status_label.setText("Hoàn tất tô màu AI.")
         except Exception as e:
             QMessageBox.critical(self, "Lỗi AI", f"Không thể chạy mô hình tô màu:\n{e}")
@@ -1203,5 +1203,9 @@ class MainWindow(QMainWindow):
             "• Giao diện: PySide6 (Dark Mode)\n"
             "• Đầy đủ chức năng G1–G4, M1–M8\n"
             "• Nâng cao: Phương án A — Tô màu ảnh đen trắng (Zhang et al., 2016)\n\n"
-            "Mẹo: Giữ Ctrl + lăn chuột để Phóng to / Thu nhỏ ảnh."
+            "Mẹo: Giữ Ctrl + lăn chuột để Phóng to / Thu nhỏ ảnh.\n\n"
+            "Thành viên tham gia:\n"
+            "Võ Trần Bình An\n"
+            "Cao Quân Bảo\n"
+            "Phạm Thanh Vinh"
         )

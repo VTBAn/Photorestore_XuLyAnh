@@ -9,7 +9,7 @@ def negative(img: np.ndarray) -> np.ndarray:
 
 def log_transform(img: np.ndarray) -> np.ndarray:
     """
-    [TC] Biến đổi log: s = c * log(1 + r), với c = 255 / log(256).
+    Biến đổi log: s = c * log(1 + r), với c = 255 / log(256).
     Làm sáng vùng tối, nén vùng sáng.
     """
     r = img.astype(np.float64)
@@ -20,7 +20,7 @@ def log_transform(img: np.ndarray) -> np.ndarray:
 
 def gamma_transform(img: np.ndarray, gamma: float = 1.0) -> np.ndarray:
     """
-    [TC] Biến đổi gamma: s = 255 * (r / 255)^gamma.
+    Biến đổi gamma: s = 255 * (r / 255)^gamma.
     gamma < 1 làm sáng ảnh; gamma > 1 làm tối ảnh.
     """
     gamma = max(0.05, float(gamma))
@@ -42,7 +42,7 @@ def contrast_stretch(img: np.ndarray, low: int = 0, high: int = 255) -> np.ndarr
 
 
 def _equalize_single_channel_tc(channel: np.ndarray) -> np.ndarray:
-    """[TC] Cân bằng histogram cho 1 kênh ảnh bằng NumPy."""
+    """Cân bằng histogram cho 1 kênh ảnh bằng NumPy."""
     # 1. Đếm số điểm ảnh ở mỗi mức xám 0..255
     hist = np.bincount(channel.ravel(), minlength=256).astype(np.float64)
     # 2. Chia cho tổng số điểm ảnh -> xác suất
@@ -55,7 +55,7 @@ def _equalize_single_channel_tc(channel: np.ndarray) -> np.ndarray:
 
 
 def histogram_equalize_tc(img: np.ndarray) -> np.ndarray:
-    """[TC] Cân bằng histogram tự cài bằng NumPy (hỗ trợ cả ảnh xám và ảnh màu)."""
+    """Cân bằng histogram tự cài bằng NumPy (hỗ trợ cả ảnh xám và ảnh màu)."""
     if img.ndim == 2:
         return _equalize_single_channel_tc(img)
     channels = cv2.split(img)
