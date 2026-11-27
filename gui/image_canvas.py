@@ -1,8 +1,8 @@
 import cv2
 import numpy as np
-from PySide6.QtCore import Qt, Signal, QRect, QPoint
-from PySide6.QtGui import QImage, QPixmap, QPainter, QPen, QColor
-from PySide6.QtWidgets import QLabel, QScrollArea
+from PySide6.QtCore import Qt, Signal, QRect, QPoint, QEvent
+from PySide6.QtGui import QImage, QPixmap, QPainter, QPen, QColor, QCursor
+from PySide6.QtWidgets import QApplication, QLabel, QScrollArea
 
 
 def numpy_to_qpixmap(img: np.ndarray) -> QPixmap:
@@ -40,14 +40,56 @@ class ImageCanvas(QScrollArea):
         self._tool: str = "pointer"
         self._drag_start: QPoint | None = None
         self._drag_end: QPoint | None = None
+        self._space_pressed = False
+        self._is_panning = False
+        self._pan_last_pos: QPoint | None = None
 
         self.image_label.mouseMoveEvent = self._on_mouse_move
         self.image_label.mousePressEvent = self._on_mouse_press
         self.image_label.mouseReleaseEvent = self._on_mouse_release
+        app = QApplication.instance()
+        if app is not None:
+            app.installEventFilter(self)
 
     def set_tool(self, tool_name: str):
         self._tool = tool_name
-        cursor = Qt.CrossCursor if tool_name in ("crop", "eyedropper") else Qt.ArrowCursor
+        self._update_cursor()
+
+    def _cursor_over_canvas(self) -> bool:
+        pos = self.viewport().mapFromGlobal(QCursor.pos())
+        return self.viewport().rect().contains(pos)
+
+    def eventFilter(self, watched, event):
+        if (
+            event.type() in (QEvent.Type.KeyPress, QEvent.Type.KeyRelease)
+            and event.key() == Qt.Key_Space
+        ):
+            if event.isAutoRepeat():
+                return self._space_pressed
+
+            if event.type() == QEvent.Type.KeyPress:
+                if self._cursor_over_canvas() and self._img is not None:
+                    self._space_pressed = True
+                    self._update_cursor()
+                    return True
+
+            elif self._space_pressed:
+                self._space_pressed = False
+                self._update_cursor()
+                return True
+
+        return super().eventFilter(watched, event)
+
+    def _update_cursor(self):
+        if self._is_panning:
+            cursor = Qt.ClosedHandCursor
+        elif self._space_pressed and self._img is not None:
+            cursor = Qt.OpenHandCursor
+        elif self._tool in ("crop", "eyedropper"):
+            cursor = Qt.CrossCursor
+        else:
+            cursor = Qt.ArrowCursor
+
         self.image_label.setCursor(cursor)
 
     def set_image(self, img: np.ndarray | None):
@@ -105,10 +147,25 @@ class ImageCanvas(QScrollArea):
         return f"(B, G, R) = ({int(val[0])}, {int(val[1])}, {int(val[2])})"
 
     def _on_mouse_move(self, event):
+        if self._is_panning and self._pan_last_pos is not None:
+            pos = event.globalPosition().toPoint()
+            delta = pos - self._pan_last_pos
+
+            self.horizontalScrollBar().setValue(
+                self.horizontalScrollBar().value() - delta.x()
+            )
+            self.verticalScrollBar().setValue(
+                self.verticalScrollBar().value() - delta.y()
+            )
+
+            self._pan_last_pos = pos
+            return
+
         coords = self._to_image_coords(event.position().toPoint())
         if coords:
             x, y = coords
             self.pixel_hovered.emit(x, y, self._format_pixel(x, y))
+
         if self._tool == "crop" and self._drag_start:
             self._drag_end = event.position().toPoint()
             self._render()
@@ -116,6 +173,13 @@ class ImageCanvas(QScrollArea):
     def _on_mouse_press(self, event):
         if event.button() != Qt.LeftButton or self._img is None:
             return
+
+        if self._space_pressed:
+            self._is_panning = True
+            self._pan_last_pos = event.globalPosition().toPoint()
+            self._update_cursor()
+            return
+
         pt = event.position().toPoint()
         if self._tool == "crop":
             self._drag_start = pt
@@ -127,11 +191,18 @@ class ImageCanvas(QScrollArea):
                 self.pixel_picked.emit(x, y, self._format_pixel(x, y))
 
     def _on_mouse_release(self, event):
+        if event.button() == Qt.LeftButton and self._is_panning:
+            self._is_panning = False
+            self._pan_last_pos = None
+            self._update_cursor()
+            return
+
         if self._tool == "crop" and self._drag_start and self._drag_end:
             c1 = self._to_image_coords(self._drag_start)
             c2 = self._to_image_coords(self._drag_end)
             self._drag_start = None
             self._drag_end = None
             self._render()
+
             if c1 and c2 and (abs(c2[0] - c1[0]) > 4 and abs(c2[1] - c1[1]) > 4):
                 self.roi_selected.emit(c1[0], c1[1], c2[0], c2[1])
