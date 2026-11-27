@@ -177,6 +177,8 @@ class VideoStudioDialog(QDialog):
             if self.ops_list.item(i).checkState() == Qt.Checked:
                 selected_ops.append(self.history_ops[i])
 
+        mode = self.mode_combo.currentIndex()
+
         out_path, _ = QFileDialog.getSaveFileName(self, "Xuất video", "", "MP4 (*.mp4);;AVI (*.avi)")
         if not out_path:
             return
@@ -190,19 +192,37 @@ class VideoStudioDialog(QDialog):
         fourcc = cv2.VideoWriter_fourcc(*("mp4v" if out_path.lower().endswith(".mp4") else "XVID"))
         writer = cv2.VideoWriter(out_path, fourcc, self.fps, (w, h))
 
+        export_tracker = OpticalFlowTracker(max_corners=100)
+        prev_export_frame = None
         idx = 0
+
         while True:
             ok, frame = cap_in.read()
             if not ok:
                 break
+
+            # 1. Áp chuỗi lệnh chỉnh ảnh từ Lịch sử (nếu có chọn)
             proc = frame
             for _, func, kwargs in selected_ops:
                 res = func(proc, **kwargs)
                 proc = res[0] if isinstance(res, tuple) else res
+
+            # 2. Áp chế độ đang chọn trong ComboBox (mode == 0 giữ nguyên)
+            if mode == 1:  # Phát hiện thay đổi (Frame Differencing)
+                if prev_export_frame is not None:
+                    out_frame = frame_difference(proc, prev_export_frame)
+                else:
+                    out_frame = np.zeros_like(proc)
+                prev_export_frame = proc.copy()
+                proc = out_frame
+            elif mode == 2:  # Theo vết chuyển động (Lucas-Kanade Optical Flow)
+                proc = export_tracker.process_frame(proc)
+
             if proc.ndim == 2:
                 proc = cv2.cvtColor(proc, cv2.COLOR_GRAY2BGR)
             if proc.shape[1] != w or proc.shape[0] != h:
                 proc = cv2.resize(proc, (w, h))
+
             writer.write(proc)
             idx += 1
             self.progress.setValue(int(idx * 100 / self.total_frames))
@@ -212,6 +232,7 @@ class VideoStudioDialog(QDialog):
         self.progress.setValue(100)
         QMessageBox.information(self, "Hoàn tất", f"Đã xuất video thành công ({idx} khung):\n{out_path}")
 
+        
     def closeEvent(self, event):
         self.timer.stop()
         if self.cap:
